@@ -77,7 +77,7 @@ class GameController(object):
         self.text.showReady()
     p = 0
     refresh = 300
-    speed = 1000
+    speed = 200
     def update(self):
         #Where the game instances are run #################################################################
 
