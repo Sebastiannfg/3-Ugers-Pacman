@@ -12,7 +12,7 @@ class Fruit(Entity):
         self.timer = 0
         self.destroy = False
         self.points = 100
-        self.image = self.spritesheet.getImage(8,2,32,32)
+        self.image = self.spritesheet.getImage(8,2,16,16)   #Set to 16, 16 to fit with map size. was 32, 32.
         
     def update(self, dt):
         self.timer += dt

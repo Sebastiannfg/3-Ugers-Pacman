@@ -76,20 +76,25 @@ class GameController(object):
         self.pause.force(True)
         self.text.showReady()
     p = 0
+    refresh = 300
+    speed = 1000
     def update(self):
-        #Where the game instances are run
-        GameController.p += 1
-        if GameController.p == 500:
-            self.score -= 1
-            GameController.p = 0
-        #This was added to reduce the score over time
+        #Where the game instances are run #################################################################
 
         if not self.gameover:
-            dt = self.clock.tick(300) / 300.0
+            dt = self.clock.tick(GameController.refresh) / GameController.speed
             # CHANGE TIME  (   clock.tick( refresh rate )   / speed (lower number, higher speed)
+            #NOTE: Refresh rate controls how often p is increased. Must be used carefully if - per turn is consistent.
             if not self.pause.paused:
                 self.pacman.update(dt)
                 #self.ghosts.update(dt, self.pacman)   Stopper spøgelser med at opdaterer
+                GameController.p +=1
+                print(GameController.p)
+                if GameController.p == 500:
+                    self.score -= 1
+                    GameController.p = 0
+                # This ^^^^^ was added to reduce the score over time ######################################################
+
                 if self.fruit is not None:
                     self.fruit.update(dt)
                 if self.pause.pauseType != None:
