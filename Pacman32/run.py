@@ -12,6 +12,7 @@ from text import TextGroup
 from sprites import Spritesheet
 from maze import Maze
 
+
 class GameController(object):
     #general activation
     def __init__(self):
@@ -74,9 +75,14 @@ class GameController(object):
         self.fruit = None
         self.pause.force(True)
         self.text.showReady()
-        
+    p = 0
     def update(self):
         #Where the game instances are run
+        GameController.p += 1
+        if GameController.p == 500:
+            self.score -= 1
+            GameController.p = 0
+        #This was added to reduce the score over time
 
         if not self.gameover:
             dt = self.clock.tick(300) / 300.0
@@ -122,7 +128,7 @@ class GameController(object):
             #                self.text.hideMessages()
 
     def checkPelletEvents(self):
-        #This section is in charge of checking if Pacman is on a pellet.
+        #This section is in charge of checking of Pacman is on a pellet.
 
 
         pellet = self.pacman.eatPellets(self.pellets.pelletList)
@@ -206,6 +212,7 @@ class GameController(object):
         pygame.display.update()
 
 
+
 if __name__ == "__main__":
     #starts and runs the game
 
@@ -213,3 +220,4 @@ if __name__ == "__main__":
     game.startGame()
     while True:
         game.update()
+
