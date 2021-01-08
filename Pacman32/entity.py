@@ -63,7 +63,8 @@ class Entity(object):
         if self.visible:
             if self.image is not None:
                 p = self.position.asTuple()
-                p = (p[0]-TILEWIDTH/2, p[1]-TILEWIDTH/2)
+                p = (p[0], p[1])   #Used to be (p[0]-TILEWIDTH/10000, p[1]-TILEWIDTH) , removed
+                #TILEWIDTH to fit to map
                 screen.blit(self.image, p)
             else:
                 p = self.position.asInt()

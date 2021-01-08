@@ -23,16 +23,19 @@ class PowerPellet(Pellet):
     def __init__(self, x, y):
         Pellet.__init__(self, x, y)
         self.name = "powerpellet"
-        self.radius = 8
+        self.color = GREEN
+        self.radius = 6
         self.points = 50
-        self.flashTime = 0.2
-        self.timer= 0
+
+        #Stoppign the pellef from flashing, as this could create issues with the AI
+        #self.flashTime = 1
+        #self.timer= 0
         
-    def update(self, dt):
-        self.timer += dt
-        if self.timer >= self.flashTime:
-            self.visible = not self.visible
-            self.timer = 0
+    #def update(self, dt):
+        #self.timer += dt
+        #if self.timer >= self.flashTime:
+        #    self.visible = not self.visible
+        #    self.timer = 0
 
 
 class PelletGroup(object):
@@ -44,8 +47,9 @@ class PelletGroup(object):
         self.createPelletList(pelletfile)
         
     def update(self, dt):
-        for powerpellet in self.powerpellets:
-            powerpellet.update(dt)
+        pass
+        #for powerpellet in self.powerpellets:
+        #    powerpellet.update(dt)
                 
     def createPelletList(self, pelletfile):
         grid = self.readPelletfile(pelletfile)        

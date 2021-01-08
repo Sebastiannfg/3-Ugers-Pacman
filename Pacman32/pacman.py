@@ -13,7 +13,7 @@ class Pacman(Entity):
         self.setStartPosition()
         self.lives = 5
         #self.image = self.spritesheet.getImage(0, 1, 32, 32)
-        self.startImage = self.spritesheet.getImage(4, 0, 32, 32)
+        self.startImage = self.spritesheet.getImage(4.5, 0.5, 16, 16)
         self.image = self.startImage
         self.animation = None
         self.animations = {}
@@ -126,38 +126,43 @@ class Pacman(Entity):
 
 
     def defineAnimations(self):
-        anim = Animation("loop")
-        anim.speed = 30
-        anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(0, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(0, 1, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(0, 0, 32, 32))
-        self.animations["left"] = anim
-        
-        anim = Animation("loop")
-        anim.speed = 30
-        anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(1, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(1, 1, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(1, 0, 32, 32))
-        self.animations["right"] = anim
-        
-        anim = Animation("loop")
-        anim.speed = 30
-        anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(2, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(2, 1, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(2, 0, 32, 32))
-        self.animations["down"] = anim
-        
-        anim = Animation("loop")
-        anim.speed = 30
-        anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(3, 0, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(3, 1, 32, 32))
-        anim.addFrame(self.spritesheet.getImage(3, 0, 32, 32))
+        anim = Animation("static") #keeps the same image wihout reloading all the time
+        anim.speed = 1
+        anim.addFrame(self.spritesheet.getImage(4.5, 0.5, 16, 16))   #Changed size to fit map
         self.animations["up"] = anim
+
+
+
+
+        #Removed all of this process to make program more processor friendly. Sebastian Grut.
+
+        #anim = Animation("loop")
+        #anim.speed = 32
+        #anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(1, 0, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(1, 1, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(1, 0, 32, 32))
+        #self.animations["right"] = anim
         
+        #anim = Animation("loop")
+        #anim.speed = 32
+        #anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(2, 0, 32, 32))
+        #nim.addFrame(self.spritesheet.getImage(2, 1, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(2, 0, 32, 32))
+        #self.animations["down"] = anim
+        
+        #anim = Animation("loop")
+        #anim.speed = 32
+        #anim.addFrame(self.spritesheet.getImage(4, 0, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(3, 0, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(3, 1, 32, 32))
+        #anim.addFrame(self.spritesheet.getImage(3, 0, 32, 32))
+        #self.animations["up"] = anim
+
+
+        #Fine to leave for tiem being. Death animation removed in run anyway.
+
         anim = Animation("once")
         anim.speed = 10
         anim.addFrame(self.spritesheet.getImage(0, 7, 32, 32))
@@ -178,15 +183,16 @@ class Pacman(Entity):
         self.animations["idle"] = anim
         
     def updateAnimation(self, dt):
-        if self.direction == UP:
-            self.animation = self.animations["up"]
-        elif self.direction == DOWN:
-            self.animation = self.animations["down"]
-        elif self.direction == LEFT:
-            self.animation = self.animations["left"]
-        elif self.direction == RIGHT:
-            self.animation = self.animations["right"]
-        elif self.direction == STOP:
-            self.animation = self.animations["idle"]
+        if True:    #from self.direction == UP
+            self.animation = self.animations["up"] #More processor friendly to only have one function.
+
+        #elif self.direction == DOWN:
+        #    self.animation = self.animations["down"]
+        #elif self.direction == LEFT:
+        #    self.animation = self.animations["left"]
+        #elif self.direction == RIGHT:
+        #    self.animation = self.animations["right"]
+        #elif self.direction == STOP:
+        #    self.animation = self.animations["idle"]
         self.image = self.animation.update(dt)
             

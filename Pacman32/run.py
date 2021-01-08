@@ -205,7 +205,7 @@ class GameController(object):
         self.text.render(self.screen)
         pygame.display.update()
 
-#
+
 if __name__ == "__main__":
     #starts and runs the game
 
