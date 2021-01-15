@@ -32,26 +32,25 @@ class Pacman(Entity):
             x = 10 + 42 * i
             y = TILEHEIGHT * NROWS - 32
             screen.blit(self.lifeicons, (x, y))
-            
-    def update(self, dt):
+    l = 0
+    def update(self, dt, direction):
         self.visible = True
         self.position += self.direction*self.speed*dt
         self.updateAnimation(dt)
-        direction = self.getValidKey()
-        if direction:
-            self.moveByKey(direction)
+        if True: #was direction
+            self.moveByKey(direction)   #replaced getValidKey() with direction, removes the need to process anything
         else:
             self.moveBySelf()
 
     def getValidKey(self):
-        key_pressed = pygame.key.get_pressed()
-        if key_pressed[K_UP]:
+        #key_pressed = pygame.key.get_pressed()
+        if self.direction == "UP":
             return UP
-        if key_pressed[K_DOWN]:
+        if self.direction == "DOWN":
             return DOWN
-        if key_pressed[K_LEFT]:
+        if self.direction == "LEFT":
             return LEFT
-        if key_pressed[K_RIGHT]:
+        if self.direction == "RIGHT":
             return RIGHT
         return None
 

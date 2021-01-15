@@ -1,3 +1,6 @@
+#Pacman integrated into AI program by Sebastian Grut
+
+
 import pygame
 from pygame.locals import *
 from constants import *
@@ -11,11 +14,45 @@ from levels import LevelController
 from text import TextGroup
 from sprites import Spritesheet
 from maze import Maze
+import atari_py
+import PIL
+import matplotlib
+
+#AI program imports
+import gym
+import tensorflow as tf
+import numpy as np
+from tensorflow import keras
+from collections import deque
+import time
+import random
+from gym import error, spaces
+from gym import utils
+from gym.utils import seeding
+#AI constants
+# An episode is a full game
+
+config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
+
+train_episodes = 300
+test_episodes = 100
+
+
+#PACMAN PROGRAM CODE --------------------------------------------------------------------------------------
+#PACMAN PROGRAM CODE --------------------------------------------------------------------------------------
+
+
 
 
 class GameController(object):
-    #general activation
+
+    #__init__ function
     def __init__(self):
+        #Added for AI program from atari_env.py
+        self.ale = atari_py.ALEInterface()
+        self.last_score = 0
+
+
         pygame.init()
         self.screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
         self.background = None
@@ -28,12 +65,80 @@ class GameController(object):
         self.text = TextGroup()
         self.sheet = Spritesheet()
         self.maze = Maze(self.sheet)
-        
+
+        #Taken from atari program
+        #self.action_space = spaces.Discrete(len(self._action_set))
+        self.seed()
+        self.action_space = spaces.Discrete(4)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(SCREENHEIGHT, SCREENWIDTH, 3), dtype=np.uint8)
+
+
+
+    #All code below is made using atari_env.py from the gym pack. in the gym pack
+    def move(self, action):
+        if action == 0:
+            self.direction = UP
+        elif action == 1:
+            self.direction = DOWN
+        elif action == 2:
+            self.direction = LEFT
+        elif action == 3:
+            self.direction = RIGHT
+        self.Update()
+
+    def step(self, action):
+        self.move(action)
+        reward = self.score-self.last_score
+
+        #rewards for winning or losing
+        if self.gameover:
+            reward -= 1000
+        elif self.is_done:
+            reward += 1000
+        done = self.is_done()
+        self.last_score = self.score
+
+        observation = self._get_obs()
+        return observation, reward, done, {}
+
+
+    def is_done(self):
+        if (self.pellets.isEmpty() or self.gameover):
+            return True
+        else:
+            return False
+
+    def _get_image(self):
+        return pygame.surfarray.array3d(self.screen)
+
+    def _get_obs(self):
+        img = self._get_image()
+        return img
+
+    def seed(self, seed=None):
+        self.np_random, seed1 = seeding.np_random(seed)
+        # Derive a random seed. This gets passed as a uint, but gets
+        # checked as an int elsewhere, so we need to keep it below
+        # 2**31.
+        seed2 = seeding.hash_seed(seed1 + 1) % 2**31
+        # Empirically, we need to seed before loading the ROM.
+        self.ale.setInt(b'random_seed', seed2)
+
+        return [seed1, seed2]
+
+
+
+
+    #general activation
+
+
+
+
     def setBackground(self):
         self.background = pygame.surface.Surface(SCREENSIZE).convert()
         self.background.fill(BLACK)
 
-    def startGame(self):
+    def reset(self):   #was StartGame, changed to fit with AI program
         #Sets up the game
 
         self.level.reset()
@@ -76,23 +181,23 @@ class GameController(object):
         self.pause.force(True)
         self.text.showReady()
     p = 0
-    refresh = 300
-    speed = 200
-    def update(self):
+    refresh = 60
+    speed = 1000
+    def Update(self):
         #Where the game instances are run #################################################################
-
         if not self.gameover:
             dt = self.clock.tick(GameController.refresh) / GameController.speed
             # CHANGE TIME  (   clock.tick( refresh rate )   / speed (lower number, higher speed)
             #NOTE: Refresh rate controls how often p is increased. Must be used carefully if - per turn is consistent.
             if not self.pause.paused:
-                self.pacman.update(dt)
+
+                self.pacman.update(dt, self.direction)
                 #self.ghosts.update(dt, self.pacman)   Stopper spøgelser med at opdaterer
-                GameController.p +=1
-                print(GameController.p)
-                if GameController.p == 500:
-                    self.score -= 1
-                    GameController.p = 0
+                #GameController.p +=1
+                #print(GameController.p)
+                #if GameController.p == 500:
+                #    self.score -= 1
+                #    GameController.p = 0
                 # This ^^^^^ was added to reduce the score over time ######################################################
 
                 if self.fruit is not None:
@@ -106,11 +211,12 @@ class GameController(object):
             self.pause.update(dt)
             self.pellets.update(dt)
             self.text.update(dt)
-        self.checkEvents()
+        #self.check_Events()
         self.text.updateScore(self.score)
-        self.render()
+        #env.render     the AI program does this
 
-    def checkEvents(self):
+
+    def check_Events(self): #Was checkEvents. Changed to match AI program
         #Simple commands while in game
 
         for event in pygame.event.get():
@@ -133,7 +239,7 @@ class GameController(object):
             #                self.text.hideMessages()
 
     def checkPelletEvents(self):
-        #This section is in charge of checking of Pacman is on a pellet.
+        #This section is in charge of checking if Pacman is on a pellet.
 
 
         pellet = self.pacman.eatPellets(self.pellets.pelletList)
@@ -201,12 +307,14 @@ class GameController(object):
 
         self.startGame()
         self.pause.pauseType = None
-    
+
+
+
     def render(self):
         #In charge of rendering all characters, ghosts, pellets, ghosts etc...
 
         self.screen.blit(self.background, (0, 0))
-        #self.nodes.render(self.screen)  (Not my doing)
+        #self.nodes.render(self.screen)  (This change was made by the creators doing)
         self.pellets.render(self.screen)
         if self.fruit is not None:
             self.fruit.render(self.screen)
@@ -214,15 +322,156 @@ class GameController(object):
         #self.ghosts.render(self.screen)    Ghost command, removed to get rid of ghosts
         self.pacman.renderLives(self.screen)
         self.text.render(self.screen)
+
+
         pygame.display.update()
 
 
 
-if __name__ == "__main__":
-    #starts and runs the game
+#AI PROGRAM CODE --------------------------------------------------------------------------------------
+#AI PROGRAM CODE --------------------------------------------------------------------------------------
 
-    game = GameController()
-    game.startGame()
-    while True:
-        game.update()
+
+
+
+def agent(state_shape, action_shape):
+    """ The agent maps X-states to Y-actions
+    e.g. The neural network output is [.1, .7, .1, .3]
+    The highest value 0.7 is the Q-Value.
+    The index of the highest action (0.7) is action #1.
+    """
+    learning_rate = 0.001
+    init = tf.keras.initializers.HeUniform()
+    model = keras.Sequential()
+    model.add(keras.layers.Dense(24, input_shape=state_shape, activation='relu', kernel_initializer=init))
+    model.add(keras.layers.Dense(12, activation='relu', kernel_initializer=init))
+    model.add(keras.layers.Dense(action_shape, activation='linear', kernel_initializer=init))
+    model.compile(loss=tf.keras.losses.Huber(), optimizer=tf.keras.optimizers.Adam(lr=learning_rate), metrics=['accuracy'])
+    return model
+
+def get_qs(model, state, step):
+    return model.predict(state.reshape([1, state.shape[0]]))[0]
+
+def train(env, replay_memory, model, target_model, done):
+    learning_rate = 0.7 # Learning rate
+    discount_factor = 0.618
+
+    MIN_REPLAY_SIZE = 1000
+    if len(replay_memory) < MIN_REPLAY_SIZE:
+        return
+
+
+    batch_size = 32
+    mini_batch = random.sample(replay_memory, batch_size)
+    current_states = np.array([encode_observation(transition[0], env.observation_space.shape) for transition in mini_batch])
+    current_qs_list = model.predict(current_states)
+    new_current_states = np.array([encode_observation(transition[3], env.observation_space.shape) for transition in mini_batch])
+    future_qs_list = target_model.predict(new_current_states)
+
+    X = []
+    Y = []
+    for index, (observation, action, reward, new_observation, done) in enumerate(mini_batch):
+        if not done:
+            max_future_q = reward + discount_factor * np.max(future_qs_list[index])
+        else:
+            max_future_q = reward
+
+        current_qs = current_qs_list[index]
+        current_qs[action] = (1 - learning_rate) * current_qs[action] + learning_rate * max_future_q
+
+        X.append(encode_observation(observation, env.observation_space.shape))
+        Y.append(current_qs)
+    model.fit(np.array(X), np.array(Y), batch_size=batch_size, verbose=0, shuffle=True)
+
+def encode_observation(observation, n_dims):
+    return observation
+def main():
+    epsilon = 1 # Epsilon-greedy algorithm in initialized at 1 meaning every step is random at the start
+    max_epsilon = 1 # You can't explore more than 100% of the time
+    min_epsilon = 0.01 # At a minimum, we'll always explore 1% of the timepygame.surfarray.array3d(self.screen)speed
+    decay = 0.01
+    frame = 0
+    # 1. Initialize the Target and Main models
+    # Main Model (updated every step)
+    model = agent(env.observation_space.shape, env.action_space.n)
+    # Target Model (updated every 100 steps)
+    target_model = agent(env.observation_space.shape, env.action_space.n)
+    target_model.set_weights(model.get_weights())
+
+    replay_memory = deque(maxlen=50_000)
+
+    target_update_counter = 0
+
+    # X = states, y = actions
+    X = []
+    y = []
+
+    steps_to_update_target_model = 0
+
+    for episode in range(train_episodes):
+
+        total_training_rewards = 0
+        observation = env.reset()
+        done = False
+        while not done:
+            steps_to_update_target_model += 1
+
+            if True:
+                env.render()
+
+            random_number = np.random.rand()
+            # 2. Explore using the Epsilon Greedy Exploration Strategy
+            if random_number <= epsilon:
+                # Explore
+                action = env.action_space.sample()
+            else:
+                # Exploit best known action
+                # model dims are (batch, env.observation_space.n)
+                encoded = encode_observation(observation, env.observation_space.shape[0])
+                encoded_reshaped = encoded.reshape([1, encoded.shape[0]])
+                predicted = model.predict(encoded_reshaped).flatten()
+                action = np.argmax(predicted)
+            new_observation, reward, done, info = env.step(action)
+            replay_memory.append([observation, action, reward, new_observation, done])
+
+            # 3. Update the Main Network using the Bellman Equation
+            if steps_to_update_target_model % 4 == 0 or done:
+                train(env, replay_memory, model, target_model, done)
+
+            observation = new_observation
+            total_training_rewards += reward
+
+            if done:
+                print('Total training rewards: {} after n steps = {} with final reward = {}'.format(total_training_rewards, episode, reward))
+                total_training_rewards += 1
+
+                if steps_to_update_target_model >= 100:
+                    print('Copying main network weights to the target network weights')
+                    target_model.set_weights(model.get_weights())
+                    steps_to_update_target_model = 0
+                break
+
+        epsilon = min_epsilon + (max_epsilon - min_epsilon) * np.exp(-decay * episode)
+    env.close()
+
+
+#AI import code for pacman game. To be replaced
+RANDOM_SEED = 5
+tf.random.set_seed(RANDOM_SEED)
+
+#env = gym.make('MsPacman-ram-v0')
+env = GameController()     #makes the GameController our class
+env.seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+print(env.seed(RANDOM_SEED))
+
+if __name__ == '__main__':
+    main()
+
+#if __name__ == "__main__":
+#    #starts and runs the game
+#   game = GameController()
+#   game.reset()
+#   while True:
+#       game.Update()
 
