@@ -15,6 +15,8 @@ RIGHT = Vector2(1, 0)
 STOP = Vector2()
 
 YELLOW = (255, 255, 0)
+#Adding green to add to the program
+GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
