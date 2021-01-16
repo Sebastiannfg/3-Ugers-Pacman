@@ -193,7 +193,7 @@ class GameController(object):
     refresh = 60
     speed = 1000
     def Update(self):
-        #Where the game instances are run #################################################################
+        #Where the game instances are run ################################################################
         if not self.gameover:
             dt = self.clock.tick(GameController.refresh) / GameController.speed
             # CHANGE TIME  (   clock.tick( refresh rate )   / speed (lower number, higher speed)
