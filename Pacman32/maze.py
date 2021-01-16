@@ -8,7 +8,7 @@ class Maze(object):
         self.rotateInfo = None
         self.images = []
         self.flash_images = []
-        self.imageRow = 16
+        self.imageRow = 64
         
     def getMazeImages(self, row=0):
         self.images = []

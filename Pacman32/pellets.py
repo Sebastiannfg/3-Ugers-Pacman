@@ -8,7 +8,7 @@ class Pellet(object):
         self.position = Vector2(x, y)
         self.color = WHITE
         #self.radius = 4
-        self.radius = 2
+        self.radius = 1
         self.points = 10
         self.visible = True
         
@@ -24,7 +24,7 @@ class PowerPellet(Pellet):
         Pellet.__init__(self, x, y)
         self.name = "powerpellet"
         self.color = GREEN
-        self.radius = 6
+        self.radius = 2
         self.points = 50
 
         #Stoppign the pellef from flashing, as this could create issues with the AI

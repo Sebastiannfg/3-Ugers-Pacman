@@ -33,6 +33,14 @@ from gym.utils import seeding
 # An episode is a full game
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  try:
+    tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=5000)])
+  except RuntimeError as e:
+    print(e)
+
+
 
 train_episodes = 300
 test_episodes = 100
@@ -70,7 +78,8 @@ class GameController(object):
         #self.action_space = spaces.Discrete(len(self._action_set))
         self.seed()
         self.action_space = spaces.Discrete(4)
-        self.observation_space = spaces.Box(low=0, high=255, shape=(SCREENHEIGHT, SCREENWIDTH, 3), dtype=np.uint8)
+        #self.observation_space = spaces.Box(low=0, high=255, dtype=np.uint8, shape=(128,))
+        self.observation_space = spaces.Box(low = 0, high=255, shape=(SCREENWIDTH, SCREENHEIGHT, 3), dtype=np.uint8)
 
 
 
@@ -190,7 +199,6 @@ class GameController(object):
             # CHANGE TIME  (   clock.tick( refresh rate )   / speed (lower number, higher speed)
             #NOTE: Refresh rate controls how often p is increased. Must be used carefully if - per turn is consistent.
             if not self.pause.paused:
-
                 self.pacman.update(dt, self.direction)
                 #self.ghosts.update(dt, self.pacman)   Stopper spøgelser med at opdaterer
                 #GameController.p +=1
@@ -321,7 +329,7 @@ class GameController(object):
         self.pacman.render(self.screen)
         #self.ghosts.render(self.screen)    Ghost command, removed to get rid of ghosts
         self.pacman.renderLives(self.screen)
-        self.text.render(self.screen)
+        #self.text.render(self.screen)
 
 
         pygame.display.update()
@@ -340,7 +348,7 @@ def agent(state_shape, action_shape):
     The highest value 0.7 is the Q-Value.
     The index of the highest action (0.7) is action #1.
     """
-    learning_rate = 0.001
+    learning_rate = 0.0001
     init = tf.keras.initializers.HeUniform()
     model = keras.Sequential()
     model.add(keras.layers.Dense(24, input_shape=state_shape, activation='relu', kernel_initializer=init))
@@ -364,6 +372,7 @@ def train(env, replay_memory, model, target_model, done):
     batch_size = 32
     mini_batch = random.sample(replay_memory, batch_size)
     current_states = np.array([encode_observation(transition[0], env.observation_space.shape) for transition in mini_batch])
+    #current_states = np.asarray(current_states).astype('float32')
     current_qs_list = model.predict(current_states)
     new_current_states = np.array([encode_observation(transition[3], env.observation_space.shape) for transition in mini_batch])
     future_qs_list = target_model.predict(new_current_states)
@@ -416,8 +425,7 @@ def main():
         while not done:
             steps_to_update_target_model += 1
 
-            if True:
-                env.render()
+            env.render()
 
             random_number = np.random.rand()
             # 2. Explore using the Epsilon Greedy Exploration Strategy
@@ -455,7 +463,7 @@ def main():
     env.close()
 
 
-#AI import code for pacman game. To be replaced
+#AI program code
 RANDOM_SEED = 5
 tf.random.set_seed(RANDOM_SEED)
 

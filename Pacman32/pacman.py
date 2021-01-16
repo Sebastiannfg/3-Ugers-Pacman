@@ -18,7 +18,7 @@ class Pacman(Entity):
         self.animation = None
         self.animations = {}
         self.defineAnimations()
-        self.lifeicons = self.spritesheet.getImage(0, 1, 32, 32)
+        self.lifeicons = self.spritesheet.getImage(2, 4, 4, 4)
         
     def reset(self):
         self.setStartPosition()
@@ -29,8 +29,8 @@ class Pacman(Entity):
 
     def renderLives(self, screen):
         for i in range(self.lives-1):
-            x = 10 + 42 * i
-            y = TILEHEIGHT * NROWS - 32
+            x = 8 * i
+            y = TILEHEIGHT * NROWS - 4
             screen.blit(self.lifeicons, (x, y))
     l = 0
     def update(self, dt, direction):
@@ -127,7 +127,7 @@ class Pacman(Entity):
     def defineAnimations(self):
         anim = Animation("static") #keeps the same image wihout reloading all the time
         anim.speed = 1
-        anim.addFrame(self.spritesheet.getImage(4.5, 0.5, 16, 16))   #Changed size to fit map
+        anim.addFrame(self.spritesheet.getImage(5, 2, 4, 4))   #Changed size to fit map
         self.animations["up"] = anim
 
 
