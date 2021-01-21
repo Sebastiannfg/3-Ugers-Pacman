@@ -31,19 +31,21 @@ from gym import utils
 from gym.utils import seeding
 #AI constants
 # An episode is a full game
+#runtime aid
+
 
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
-    tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=5000)])
+    tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=2000)])
   except RuntimeError as e:
     print(e)
 
 
 
-train_episodes = 300
-test_episodes = 100
+train_episodes = 3000
+test_episodes = 10
 
 
 #PACMAN PROGRAM CODE --------------------------------------------------------------------------------------
@@ -79,8 +81,7 @@ class GameController(object):
         self.seed()
         self.action_space = spaces.Discrete(4)
         #self.observation_space = spaces.Box(low=0, high=255, dtype=np.uint8, shape=(128,))
-        self.observation_space = spaces.Box(low = 0, high=255, shape=(SCREENWIDTH, SCREENHEIGHT, 3), dtype=np.uint8)
-
+        self.observation_space = spaces.Box(low = 0, high=255, shape=(SCREENHEIGHT,SCREENWIDTH, 3), dtype=np.uint8)
 
 
     #All code below is made using atari_env.py from the gym pack. in the gym pack
@@ -118,7 +119,9 @@ class GameController(object):
             return False
 
     def _get_image(self):
-        return pygame.surfarray.array3d(self.screen)
+        x = pygame.surfarray.array3d(self.screen)
+        #x = self.ale.getScreenRGB2(y)
+        return x
 
     def _get_obs(self):
         img = self._get_image()
@@ -190,8 +193,8 @@ class GameController(object):
         self.pause.force(True)
         self.text.showReady()
     p = 0
-    refresh = 60
-    speed = 1000
+    refresh = 3000
+    speed = 100
     def Update(self):
         #Where the game instances are run ################################################################
         if not self.gameover:
@@ -361,24 +364,23 @@ def get_qs(model, state, step):
     return model.predict(state.reshape([1, state.shape[0]]))[0]
 
 def train(env, replay_memory, model, target_model, done):
+    min_epsilon = 0.1
     learning_rate = 0.7 # Learning rate
     discount_factor = 0.618
-
     MIN_REPLAY_SIZE = 1000
     if len(replay_memory) < MIN_REPLAY_SIZE:
         return
 
 
-    batch_size = 32
+    batch_size = 64 * 2
     mini_batch = random.sample(replay_memory, batch_size)
     current_states = np.array([encode_observation(transition[0], env.observation_space.shape) for transition in mini_batch])
-    #current_states = np.asarray(current_states).astype('float32')
     current_qs_list = model.predict(current_states)
     new_current_states = np.array([encode_observation(transition[3], env.observation_space.shape) for transition in mini_batch])
     future_qs_list = target_model.predict(new_current_states)
-
     X = []
     Y = []
+
     for index, (observation, action, reward, new_observation, done) in enumerate(mini_batch):
         if not done:
             max_future_q = reward + discount_factor * np.max(future_qs_list[index])
@@ -390,6 +392,8 @@ def train(env, replay_memory, model, target_model, done):
 
         X.append(encode_observation(observation, env.observation_space.shape))
         Y.append(current_qs)
+    X = np.asarray(X).astype(np.float32)
+    Y = np.asarray(Y).astype(np.float32)
     model.fit(np.array(X), np.array(Y), batch_size=batch_size, verbose=0, shuffle=True)
 
 def encode_observation(observation, n_dims):
@@ -397,7 +401,7 @@ def encode_observation(observation, n_dims):
 def main():
     epsilon = 1 # Epsilon-greedy algorithm in initialized at 1 meaning every step is random at the start
     max_epsilon = 1 # You can't explore more than 100% of the time
-    min_epsilon = 0.01 # At a minimum, we'll always explore 1% of the timepygame.surfarray.array3d(self.screen)speed
+    min_epsilon = 0.1 # At a minimum, we'll always explore 1% of the timepygame.surfarray.array3d(self.screen)speed
     decay = 0.01
     frame = 0
     # 1. Initialize the Target and Main models
@@ -406,7 +410,7 @@ def main():
     # Target Model (updated every 100 steps)
     target_model = agent(env.observation_space.shape, env.action_space.n)
     target_model.set_weights(model.get_weights())
-
+    s = 0
     replay_memory = deque(maxlen=50_000)
 
     target_update_counter = 0
@@ -440,7 +444,13 @@ def main():
                 predicted = model.predict(encoded_reshaped).flatten()
                 action = np.argmax(predicted)
             new_observation, reward, done, info = env.step(action)
-            replay_memory.append([observation, action, reward, new_observation, done])
+
+
+            if s == 0:
+                pass
+            else:
+                replay_memory.append([observation, action, reward, new_observation, done])
+            s = 1
 
             # 3. Update the Main Network using the Bellman Equation
             if steps_to_update_target_model % 4 == 0 or done:
@@ -471,7 +481,6 @@ tf.random.set_seed(RANDOM_SEED)
 env = GameController()     #makes the GameController our class
 env.seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
-print(env.seed(RANDOM_SEED))
 
 if __name__ == '__main__':
     main()
